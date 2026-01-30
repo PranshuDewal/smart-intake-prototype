@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Intake - Interactive Prototype</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            color: #212121;
+            overflow-x: hidden;
+        }
+
+        /* Navigation Bar */
+        .navbar {
+            background: #00BCD4;
+            color: white;
+            padding: 0 24px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar-brand {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .navbar-menu {
+            display: flex;
+            gap: 32px;
+            align-items: center;
+        }
+
+        .nav-item {
+            color: #B2EBF2;
+            cursor: pointer;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+
+        .nav-item.active {
+            color: white;
+            font-weight: 600;
+        }
+
+        .nav-item:hover {
+            color: white;
+        }
+
+        .navbar-user {
+            font-size: 13px;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        /* Screen Container */
+        .screen {
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Breadcrumb */
+        .breadcrumb {
+            color: #757575;
+            font-size: 13px;
+            margin-bottom: 16px;
+        }
+
+        /* Page Title */
+        .page-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            color: #212121;
+        }
+
+        /* Filter Bar */
+        .filter-bar {
+            background: white;
+            border: 1px solid #E0E0E0;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 12px;
+        }
+
+        .filter-tab {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            background: #f5f5f5;
+            color: #212121;
+        }
+
+        .filter-tab.active {
+            background: #00BCD4;
+            color: white;
+            font-weight: 600;
+        }
+
+        .filter-tab:hover:not(.active) {
+            background: #E0E0E0;
+        }
+
+        .sort-dropdown {
+            color: #757575;
+            font-size: 13px;
+        }
+
+        /* Table */
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table thead {
+            background: #757575;
+            color: white;
+        }
+
+        .table th {
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .table td {
+            padding: 16px;
+            border-bottom: 1px solid #E0E0E0;
+            font-size: 13px;
+        }
+
+        .table tbody tr:hover {
+            background: #f5f5f5;
+        }
+
+        .case-id {
+            color: #00838F;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .status-ready {
+            background: rgba(76, 175, 80, 0.2);
+            color: #2E7D32;
+            border: 1px solid #4CAF50;
+        }
+
+        .status-needs-info {
+            background: rgba(255, 193, 7, 0.2);
+            color: #F57C00;
+            border: 1px solid #FFC107;
+        }
+
+        .status-blocked {
+            background: rgba(244, 67, 54, 0.2);
+            color: #C62828;
+            border: 1px solid #F44336;
+        }
+
+        .confidence {
+            font-weight: 700;
+        }
+
+        .conf-high { color: #4CAF50; }
+        .conf-med { color: #FF9800; }
+        .conf-low { color: #F44336; }
+
+        /* Buttons */
+        .btn {
+            padding: 8px 20px;
+            border-radius: 6px;
+            border: none;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: #00BCD4;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #00ACC1;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 188, 212, 0.3);
+        }
+
+        .btn-secondary {
+            background: #757575;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #616161;
+        }
+
+        .btn-success {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #43A047;
+        }
+
+        .btn-warning {
+            background: #FF9800;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #FB8C00;
+        }
+
+        .btn-danger {
+            background: #FFC107;
+            color: #212121;
+        }
+
+        .btn-danger:hover {
+            background: #FFB300;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Case Header */
+        .case-header {
+            background: white;
+            border: 1px solid #E0E0E0;
+            border-radius: 8px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .case-title {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .case-meta {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        /* Split Panel */
+        .split-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .panel {
+            background: white;
+            border: 1px solid #E0E0E0;
+            border-radius: 8px;
+            padding: 24px;
+        }
+
+        .panel-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .panel-subtitle {
+            font-size: 12px;
+            color: #757575;
+            font-style: italic;
+            margin-bottom: 16px;
+        }
+
+        .field-row {
+            display: grid;
+            grid-template-columns: 180px 1fr 60px;
+            gap: 16px;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .field-label {
+            font-weight: 600;
+            color: #757575;
+            font-size: 13px;
+        }
+
+        .field-value {
+            color: #212121;
+            font-size: 13px;
+        }
+
+        .field-confidence {
+            text-align: right;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        /* Document Preview */
+        .document-preview {
+            background: #f5f5f5;
+            border: 1px solid #E0E0E0;
+            border-radius: 6px;
+            padding: 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #757575;
+            line-height: 1.6;
+            height: 400px;
+            overflow-y: auto;
+        }
+
+        /* Alert Box */
+        .alert {
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+            border-left: 4px solid;
+        }
+
+        .alert-success {
+            background: rgba(76, 175, 80, 0.1);
+            border-color: #4CAF50;
+        }
+
+        .alert-warning {
+            background: rgba(255, 152, 0, 0.1);
+            border-color: #FF9800;
+        }
+
+        .alert-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .alert-success .alert-title { color: #2E7D32; }
+        .alert-warning .alert-title { color: #E65100; }
+
+        .alert-message {
+            font-size: 13px;
+            color: #757575;
+        }
+
+        /* Validation List */
+        .validation-list {
+            margin-bottom: 24px;
+        }
+
+        .validation-item {
+            background: white;
+            border: 1px solid #E0E0E0;
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: grid;
+            grid-template-columns: 40px 180px 1fr 80px 120px;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .validation-item.error {
+            background: rgba(255, 152, 0, 0.05);
+            border-color: #FF9800;
+            border-width: 2px;
+        }
+
+        .validation-icon {
+            font-size: 20px;
+            text-align: center;
+        }
+
+        .icon-success { color: #4CAF50; }
+        .icon-warning { color: #FF9800; }
+        .icon-error { color: #F44336; }
+
+        .validation-note {
+            font-size: 11px;
+            font-style: italic;
+            color: #757575;
+        }
+
+        .value-missing {
+            color: #F44336;
+            font-style: italic;
+        }
+
+        /* Action Bar */
+        .action-bar {
+            background: white;
+            border: 1px solid #E0E0E0;
+            border-radius: 8px;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 24px;
+        }
+
+        .action-bar-label {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        /* Summary Card */
+        .summary-card {
+            background: white;
+            border: 2px solid #00BCD4;
+            border-radius: 12px;
+            padding: 32px;
+            max-width: 700px;
+            margin: 48px auto;
+        }
+
+        .summary-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 24px;
+        }
+
+        .summary-row {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            gap: 16px;
+            margin-bottom: 12px;
+            padding: 8px 0;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .summary-label {
+            font-weight: 600;
+            color: #757575;
+        }
+
+        .summary-value {
+            color: #212121;
+        }
+
+        .summary-note {
+            background: #E0F7FA;
+            padding: 16px;
+            border-radius: 6px;
+            text-align: center;
+            margin-top: 24px;
+            color: #00838F;
+            font-style: italic;
+        }
+
+        .summary-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-top: 32px;
+        }
+
+        /* Success Screen */
+        .success-container {
+            max-width: 600px;
+            margin: 48px auto;
+            text-align: center;
+        }
+
+        .success-icon {
+            font-size: 80px;
+            color: #4CAF50;
+            margin-bottom: 24px;
+        }
+
+        .success-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #4CAF50;
+            margin-bottom: 32px;
+        }
+
+        .success-details {
+            background: white;
+            border: 1px solid #E0E0E0;
+            border-radius: 8px;
+            padding: 24px;
+            text-align: left;
+            margin-bottom: 32px;
+        }
+
+        .success-details h3 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .success-details ul {
+            list-style: none;
+            line-height: 2;
+        }
+
+        .success-details li {
+            font-size: 13px;
+            color: #212121;
+        }
+
+        .success-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+        }
+
+        /* Footer */
+        .footer-note {
+            font-size: 12px;
+            color: #757575;
+            font-style: italic;
+            margin-top: 16px;
+        }
+
+        /* Screen Label */
+        .screen-label {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 131, 143, 0.9);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            z-index: 1000;
+        }
+
+        /* Quick Navigator */
+        .quick-nav {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid #00BCD4;
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+        }
+
+        .quick-nav-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: #00838F;
+            margin-bottom: 8px;
+        }
+
+        .quick-nav-buttons {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .quick-nav-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            border: 1px solid #00BCD4;
+            background: white;
+            color: #00838F;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-nav-btn:hover {
+            background: #00BCD4;
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .quick-nav-btn.current {
+            background: #00BCD4;
+            color: white;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .split-panel {
+                grid-template-columns: 1fr;
+            }
+
+            .field-row {
+                grid-template-columns: 1fr;
+            }
+
+            .validation-item {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Prototype Instructions -->
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 24px; text-align: center; font-size: 14px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+        🎯 INTERACTIVE PROTOTYPE - Click any "Review →" button to navigate through the workflow • 6 screens total
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="navbar-brand">Smart Intake</div>
+        <div class="navbar-menu">
+            <div class="nav-item active">Work Queue</div>
+            <div class="nav-item">My Cases</div>
+            <div class="nav-item">Reports</div>
+            <div class="nav-item">Settings</div>
+        </div>
+        <div class="navbar-user">Analyst: John Smith</div>
+    </nav>
+
+    <!-- SCREEN 1: Work Queue -->
+    <div class="screen active" id="screen1">
+        <div class="container">
+            <h1 class="page-title">Work Queue</h1>
+
+            <div class="filter-bar">
+                <div class="filter-tabs">
+                    <button class="filter-tab active">All Cases (43)</button>
+                    <button class="filter-tab">Ready to Review (15)</button>
+                    <button class="filter-tab">Needs Attention (8)</button>
+                    <button class="filter-tab">Blocked (5)</button>
+                </div>
+                <div class="sort-dropdown">Sort by: Priority ▼</div>
+            </div>
+
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Case ID</th>
+                            <th>Client</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>AI Confidence</th>
+                            <th>Priority</th>
+                            <th>Received</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="case-id">C-2024-1547</td>
+                            <td>Acme Corp</td>
+                            <td>Property Claim</td>
+                            <td><span class="status-badge status-ready">Ready</span></td>
+                            <td class="confidence conf-high">98%</td>
+                            <td>High</td>
+                            <td>2 hrs ago</td>
+                            <td><button class="btn btn-primary" onclick="goToScreen(2)">Review →</button></td>
+                        </tr>
+                        <tr>
+                            <td class="case-id">C-2024-1548</td>
+                            <td>TechStart Inc</td>
+                            <td>Liability</td>
+                            <td><span class="status-badge status-needs-info">Needs Info</span></td>
+                            <td class="confidence conf-med">65%</td>
+                            <td>Med</td>
+                            <td>4 hrs ago</td>
+                            <td><button class="btn btn-primary" onclick="goToScreen(4)">Review →</button></td>
+                        </tr>
+                        <tr>
+                            <td class="case-id">C-2024-1549</td>
+                            <td>Global Logistics</td>
+                            <td>Workers Comp</td>
+                            <td><span class="status-badge status-ready">Ready</span></td>
+                            <td class="confidence conf-high">95%</td>
+                            <td>High</td>
+                            <td>5 hrs ago</td>
+                            <td><button class="btn btn-primary">Review →</button></td>
+                        </tr>
+                        <tr>
+                            <td class="case-id">C-2024-1550</td>
+                            <td>City Services</td>
+                            <td>Auto Claim</td>
+                            <td><span class="status-badge status-blocked">Blocked</span></td>
+                            <td class="confidence conf-low">45%</td>
+                            <td>Low</td>
+                            <td>1 day ago</td>
+                            <td><button class="btn btn-primary">Review →</button></td>
+                        </tr>
+                        <tr>
+                            <td class="case-id">C-2024-1551</td>
+                            <td>MedTech Solutions</td>
+                            <td>Product Liability</td>
+                            <td><span class="status-badge status-ready">Ready</span></td>
+                            <td class="confidence conf-high">92%</td>
+                            <td>High</td>
+                            <td>8 hrs ago</td>
+                            <td><button class="btn btn-primary">Review →</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="footer-note">Showing 5 of 43 cases • Refreshed 30 seconds ago</div>
+        </div>
+        <div class="screen-label">SCREEN 1: Analyst Work Queue</div>
+    </div>
+
+    <!-- SCREEN 2: Case Detail - Split Screen -->
+    <div class="screen" id="screen2">
+        <div class="container">
+            <div class="breadcrumb">Work Queue > Case C-2024-1547</div>
+
+            <div class="case-header">
+                <div class="case-title">Case C-2024-1547 • Acme Corp • Property Claim</div>
+                <div class="case-meta">
+                    <span class="status-badge status-ready">Ready to Review</span>
+                    <span class="confidence conf-high">AI Confidence: 98%</span>
+                </div>
+            </div>
+
+            <div class="split-panel">
+                <div class="panel">
+                    <h2 class="panel-title">AI-Extracted Data</h2>
+                    
+                    <div class="field-row">
+                        <div class="field-label">Case ID:</div>
+                        <div class="field-value">C-2024-1547</div>
+                        <div class="field-confidence conf-high">100%</div>
+                    </div>
+                    <div class="field-row">
+                        <div class="field-label">Client Name:</div>
+                        <div class="field-value">Acme Corporation</div>
+                        <div class="field-confidence conf-high">98%</div>
+                    </div>
+                    <div class="field-row">
+                        <div class="field-label">Case Type:</div>
+                        <div class="field-value">Property Damage Claim</div>
+                        <div class="field-confidence conf-high">95%</div>
+                    </div>
+                    <div class="field-row">
+                        <div class="field-label">Jurisdiction:</div>
+                        <div class="field-value">California, USA</div>
+                        <div class="field-confidence conf-high">100%</div>
+                    </div>
+                    <div class="field-row">
+                        <div class="field-label">Incident Date:</div>
+                        <div class="field-value">December 15, 2024</div>
+                        <div class="field-confidence conf-high">92%</div>
+                    </div>
+                    <div class="field-row">
+                        <div class="field-label">Claim Amount:</div>
+                        <div class="field-value">$45,000</div>
+                        <div class="field-confidence conf-med">88%</div>
+                    </div>
+                    <div class="field-row">
+                        <div class="field-label">Policy Number:</div>
+                        <div class="field-value">POL-2024-8976</div>
+                        <div class="field-confidence conf-high">100%</div>
+                    </div>
+                    <div class="field-row">
+                        <div class="field-label">Loss Description:</div>
+                        <div class="field-value">Fire damage to warehouse facility</div>
+                        <div class="field-confidence conf-high">90%</div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2 class="panel-title">Source Document</h2>
+                    <div class="panel-subtitle">claim_form_acme_12152024.pdf</div>
+                    
+                    <div class="document-preview">
+[PDF Document Preview]
+
+CLAIM FORM
+
+Acme Corporation
+Policy: POL-2024-8976
+
+Incident Date: 12/15/2024
+Location: 4500 Industrial Blvd, Sacramento, CA
+Loss Type: Fire Damage
+Estimated Loss: $45,000
+
+Description:
+Warehouse facility sustained fire damage 
+to storage area affecting approximately 
+2,500 sq ft. Damage includes structural 
+components, inventory, and equipment.
+
+Fire Department Response: Yes
+Police Report Filed: Yes
+Injuries Reported: No
+
+Contact: Jane Smith, Risk Manager
+Phone: (916) 555-0123
+Email: jsmith@acmecorp.com
+
+Submitted: December 16, 2024
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-bar">
+                <button class="btn btn-secondary" onclick="goToScreen(1)">← Back</button>
+                <button class="btn btn-primary" onclick="goToScreen(3)">Review →</button>
+            </div>
+        </div>
+        <div class="screen-label">SCREEN 2: Case Detail - Split Screen View</div>
+    </div>
+
+    <!-- SCREEN 3: Review & Validate (Happy Path) -->
+    <div class="screen" id="screen3">
+        <div class="container">
+            <div class="breadcrumb">Work Queue > Case C-2024-1547 > Review</div>
+
+            <h1 class="page-title">Review & Validate: Case C-2024-1547</h1>
+
+            <div class="alert alert-success">
+                <div class="alert-title">✓ All Required Fields Extracted Successfully</div>
+                <div class="alert-message">8 of 8 fields validated • Overall confidence: 98% • No missing data detected</div>
+            </div>
+
+            <h3 style="margin-bottom: 16px; font-size: 16px; font-weight: 700;">Field Validation Details:</h3>
+
+            <div class="validation-list">
+                <div class="validation-item">
+                    <div class="validation-icon icon-success">✓</div>
+                    <div class="field-label">Client Name</div>
+                    <div class="field-value">Acme Corporation</div>
+                    <div class="field-confidence conf-high">98%</div>
+                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 11px;">Edit</button>
+                </div>
+
+                <div class="validation-item">
+                    <div class="validation-icon icon-success">✓</div>
+                    <div class="field-label">Case Type</div>
+                    <div class="field-value">Property Damage Claim</div>
+                    <div class="field-confidence conf-high">95%</div>
+                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 11px;">Edit</button>
+                </div>
+
+                <div class="validation-item">
+                    <div class="validation-icon icon-success">✓</div>
+                    <div class="field-label">Jurisdiction</div>
+                    <div class="field-value">California, USA</div>
+                    <div class="field-confidence conf-high">100%</div>
+                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 11px;">Edit</button>
+                </div>
+
+                <div class="validation-item">
+                    <div class="validation-icon icon-success">✓</div>
+                    <div class="field-label">Incident Date</div>
+                    <div class="field-value">December 15, 2024</div>
+                    <div class="field-confidence conf-high">92%</div>
+                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 11px;">Edit</button>
+                </div>
+
+                <div class="validation-item">
+                    <div class="validation-icon icon-success">✓</div>
+                    <div class="field-label">Claim Amount</div>
+                    <div class="field-value">$45,000</div>
+                    <div class="field-confidence conf-med">88%</div>
+                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 11px;">Edit</button>
+                </div>
+            </div>
+
+            <div class="action-bar">
+                <div class="action-buttons">
+                    <button class="btn btn-secondary">Request Info</button>
+                    <button class="btn btn-secondary" onclick="goToScreen(2)">← Back</button>
+                </div>
+                <button class="btn btn-success" onclick="goToScreen(5)">Approve →</button>
+            </div>
+        </div>
+        <div class="screen-label">SCREEN 3: Review & Validate (Happy Path)</div>
+    </div>
+
+    <!-- SCREEN 4: Edge Case - Incomplete Data -->
+    <div class="screen" id="screen4">
+        <div class="container">
+            <div class="breadcrumb">Work Queue > Case C-2024-1548 > Review</div>
+
+            <h1 class="page-title">Review & Validate: Case C-2024-1548</h1>
+
+            <div class="alert alert-warning">
+                <div class="alert-title">⚠ Issues Detected - Manual Review Required</div>
+                <div class="alert-message">3 missing fields • 1 low confidence extraction • Overall confidence: 65%</div>
+            </div>
+
+            <h3 style="margin-bottom: 16px; font-size: 16px; font-weight: 700;">Field Status:</h3>
+
+            <div class="validation-list">
+                <div class="validation-item">
+                    <div class="validation-icon icon-success">✓</div>
+                    <div class="field-label">Client Name</div>
+                    <div class="field-value">TechStart Inc</div>
+                    <div class="field-confidence conf-high">95%</div>
+                    <div></div>
+                </div>
+
+                <div class="validation-item">
+                    <div class="validation-icon icon-success">✓</div>
+                    <div class="field-label">Case Type</div>
+                    <div class="field-value">Liability Claim</div>
+                    <div class="field-confidence conf-med">88%</div>
+                    <div></div>
+                </div>
+
+                <div class="validation-item error">
+                    <div class="validation-icon icon-error">✗</div>
+                    <div class="field-label">Jurisdiction</div>
+                    <div class="field-value value-missing">[MISSING]</div>
+                    <div class="field-confidence"></div>
+                    <div style="grid-column: 1 / -1; padding-left: 56px;">
+                        <div class="validation-note">Not found in document</div>
+                        <button class="btn btn-warning" style="margin-top: 8px; padding: 6px 16px; font-size: 11px;">Resolve →</button>
+                    </div>
+                </div>
+
+                <div class="validation-item error">
+                    <div class="validation-icon icon-warning">⚠</div>
+                    <div class="field-label">Incident Date</div>
+                    <div class="field-value">Nov 2024 (unclear)</div>
+                    <div class="field-confidence conf-low">45%</div>
+                    <div style="grid-column: 1 / -1; padding-left: 56px;">
+                        <div class="validation-note">Handwritten date unclear</div>
+                        <button class="btn btn-warning" style="margin-top: 8px; padding: 6px 16px; font-size: 11px;">Resolve →</button>
+                    </div>
+                </div>
+
+                <div class="validation-item error">
+                    <div class="validation-icon icon-error">✗</div>
+                    <div class="field-label">Claim Amount</div>
+                    <div class="field-value value-missing">[MISSING]</div>
+                    <div class="field-confidence"></div>
+                    <div style="grid-column: 1 / -1; padding-left: 56px;">
+                        <div class="validation-note">Amount field blank</div>
+                        <button class="btn btn-warning" style="margin-top: 8px; padding: 6px 16px; font-size: 11px;">Resolve →</button>
+                    </div>
+                </div>
+
+                <div class="validation-item error">
+                    <div class="validation-icon icon-error">✗</div>
+                    <div class="field-label">Policy Number</div>
+                    <div class="field-value value-missing">[MISSING]</div>
+                    <div class="field-confidence"></div>
+                    <div style="grid-column: 1 / -1; padding-left: 56px;">
+                        <div class="validation-note">Multiple policy numbers found</div>
+                        <button class="btn btn-warning" style="margin-top: 8px; padding: 6px 16px; font-size: 11px;">Resolve →</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-bar">
+                <div class="action-bar-label">Analyst Actions:</div>
+                <div class="action-buttons">
+                    <button class="btn btn-warning">Request Missing Info</button>
+                    <button class="btn btn-secondary">Manual Entry</button>
+                    <button class="btn btn-danger">Block & Notify Client</button>
+                    <button class="btn btn-secondary" onclick="goToScreen(1)">← Back</button>
+                    <button class="btn btn-secondary" disabled style="opacity: 0.4; position: relative;" title="Approval disabled until issues resolved">
+                        Approve
+                        <span style="position: absolute; bottom: -18px; right: 0; font-size: 9px; white-space: nowrap; font-style: italic;">(disabled)</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="screen-label">SCREEN 4: Edge Case - Incomplete/Inconsistent Data</div>
+    </div>
+
+    <!-- SCREEN 5: Approval Confirmation -->
+    <div class="screen" id="screen5">
+        <div class="container">
+            <div class="breadcrumb">Work Queue > Case C-2024-1547 > Approve</div>
+
+            <h1 class="page-title">Approval Summary</h1>
+
+            <div class="summary-card">
+                <h2 class="summary-title">Ready to Approve Case</h2>
+
+                <div class="summary-row">
+                    <div class="summary-label">Case ID</div>
+                    <div class="summary-value">C-2024-1547</div>
+                </div>
+                <div class="summary-row">
+                    <div class="summary-label">Client</div>
+                    <div class="summary-value">Acme Corporation</div>
+                </div>
+                <div class="summary-row">
+                    <div class="summary-label">Type</div>
+                    <div class="summary-value">Property Damage Claim</div>
+                </div>
+                <div class="summary-row">
+                    <div class="summary-label">Jurisdiction</div>
+                    <div class="summary-value">California, USA</div>
+                </div>
+                <div class="summary-row">
+                    <div class="summary-label">Claim Amount</div>
+                    <div class="summary-value">$45,000</div>
+                </div>
+                <div class="summary-row">
+                    <div class="summary-label">AI Confidence</div>
+                    <div class="summary-value">98% (High)</div>
+                </div>
+                <div class="summary-row">
+                    <div class="summary-label">Validated By</div>
+                    <div class="summary-value">John Smith (Analyst)</div>
+                </div>
+                <div class="summary-row">
+                    <div class="summary-label">Validation Time</div>
+                    <div class="summary-value">2 minutes 14 seconds</div>
+                </div>
+
+                <div class="summary-note">
+                    This case will be pushed to the Legacy Case Management System
+                </div>
+
+                <div class="summary-actions">
+                    <button class="btn btn-secondary" onclick="goToScreen(3)">← Cancel</button>
+                    <button class="btn btn-success" onclick="goToScreen(6)">✓ Confirm Approval</button>
+                </div>
+            </div>
+        </div>
+        <div class="screen-label">SCREEN 5: Approval Confirmation</div>
+    </div>
+
+    <!-- SCREEN 6: Success -->
+    <div class="screen" id="screen6">
+        <div class="container">
+            <div class="success-container">
+                <div class="success-icon">✓</div>
+                <h1 class="success-title">Case Successfully Approved!</h1>
+
+                <div class="success-details">
+                    <h3>Case Details:</h3>
+                    <ul>
+                        <li>• Case C-2024-1547 has been transferred to Legacy System</li>
+                        <li>• Legacy Case ID: LEG-2024-9876 (generated)</li>
+                        <li>• Client notification email sent</li>
+                        <li>• Average processing time saved: 18 minutes per case</li>
+                        <li>• Analyst: John Smith • Approved at: 2:45 PM</li>
+                    </ul>
+                </div>
+
+                <div class="success-actions">
+                    <button class="btn btn-primary" onclick="goToScreen(1)">← Back to Queue</button>
+                    <button class="btn btn-secondary">View in Legacy</button>
+                    <button class="btn btn-secondary" onclick="goToScreen(1)">Next Case →</button>
+                </div>
+            </div>
+        </div>
+        <div class="screen-label">SCREEN 6: Success & Tracking</div>
+    </div>
+
+    <!-- Quick Screen Navigator -->
+    <div class="quick-nav">
+        <div class="quick-nav-title">QUICK NAV</div>
+        <div class="quick-nav-buttons">
+            <button class="quick-nav-btn" onclick="goToScreen(1)" title="Work Queue">1</button>
+            <button class="quick-nav-btn" onclick="goToScreen(2)" title="Case Detail">2</button>
+            <button class="quick-nav-btn" onclick="goToScreen(3)" title="Review">3</button>
+            <button class="quick-nav-btn" onclick="goToScreen(4)" title="Edge Case">4</button>
+            <button class="quick-nav-btn" onclick="goToScreen(5)" title="Approval">5</button>
+            <button class="quick-nav-btn" onclick="goToScreen(6)" title="Success">6</button>
+        </div>
+    </div>
+
+    <script>
+        function goToScreen(screenNumber) {
+            // Hide all screens
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            
+            // Show the selected screen
+            document.getElementById('screen' + screenNumber).classList.add('active');
+            
+            // Update quick nav
+            document.querySelectorAll('.quick-nav-btn').forEach((btn, index) => {
+                btn.classList.remove('current');
+                if (index + 1 === screenNumber) {
+                    btn.classList.add('current');
+                }
+            });
+            
+            // Scroll to top
+            window.scrollTo(0, 0);
+        }
+        
+        // Initialize quick nav on load
+        window.addEventListener('DOMContentLoaded', function() {
+            document.querySelector('.quick-nav-btn').classList.add('current');
+        });
+    </script>
+</body>
+</html>
