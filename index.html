@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Intake - Interactive Prototype</title>
+
     <style>
         * {
             margin: 0;
@@ -658,6 +659,72 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* Cookie Consent Banner */
+        .cookie-consent {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #1a1a2e;
+            color: #e0e0e0;
+            padding: 20px 24px;
+            z-index: 10000;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            flex-wrap: wrap;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .cookie-consent.hidden {
+            display: none;
+        }
+
+        .cookie-consent-text {
+            flex: 1;
+            min-width: 280px;
+            max-width: 720px;
+        }
+
+        .cookie-consent-text a {
+            color: #7c9cff;
+            text-decoration: underline;
+        }
+
+        .cookie-consent-buttons {
+            display: flex;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .cookie-btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .cookie-btn:hover {
+            opacity: 0.85;
+        }
+
+        .cookie-btn-accept {
+            background: #4caf50;
+            color: white;
+        }
+
+        .cookie-btn-decline {
+            background: transparent;
+            color: #e0e0e0;
+            border: 1px solid #555;
+        }
     </style>
 </head>
     <!-- Google tag (gtag.js) -->
@@ -1137,14 +1204,31 @@ Submitted: December 16, 2024
     </div>
 
     <script>
+        const screenNames = {
+            1: 'Analyst Work Queue',
+            2: 'Case Detail',
+            3: 'Review & Validate',
+            4: 'Edge Case',
+            5: 'Approval Confirmation',
+            6: 'Success'
+        };
+
         function goToScreen(screenNumber) {
             // Hide all screens
             document.querySelectorAll('.screen').forEach(screen => {
                 screen.classList.remove('active');
             });
-            
+
             // Show the selected screen
             document.getElementById('screen' + screenNumber).classList.add('active');
+
+            // Track virtual pageview in Google Analytics
+            if (typeof gtag === 'function') {
+                gtag('event', 'page_view', {
+                    page_title: screenNames[screenNumber] || 'Screen ' + screenNumber,
+                    page_path: '/screen/' + screenNumber
+                });
+            }
             
             // Update quick nav
             document.querySelectorAll('.quick-nav-btn').forEach((btn, index) => {
@@ -1162,6 +1246,73 @@ Submitted: December 16, 2024
         window.addEventListener('DOMContentLoaded', function() {
             document.querySelector('.quick-nav-btn').classList.add('current');
         });
+    </script>
+
+    <!-- Cookie Consent Banner (Quebec Law 25 - explicit opt-in) -->
+    <div id="cookieConsent" class="cookie-consent hidden">
+        <div class="cookie-consent-text">
+            This site uses cookies and analytics technologies to improve your experience.
+            In accordance with Quebec privacy law, we require your explicit consent before
+            collecting any data. By clicking "Accept", you consent to the use of Google Analytics
+            cookies for site usage analysis.
+        </div>
+        <div class="cookie-consent-buttons">
+            <button class="cookie-btn cookie-btn-decline" onclick="declineCookies()">Decline</button>
+            <button class="cookie-btn cookie-btn-accept" onclick="acceptCookies()">Accept</button>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            var GA_ID = 'G-XXXXXXXXXX';
+            var CONSENT_KEY = 'cookie_consent';
+
+            function getConsent() {
+                return localStorage.getItem(CONSENT_KEY);
+            }
+
+            function loadGoogleAnalytics() {
+                if (document.getElementById('ga-script')) return;
+                var s = document.createElement('script');
+                s.id = 'ga-script';
+                s.async = true;
+                s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
+                document.head.appendChild(s);
+
+                window.dataLayer = window.dataLayer || [];
+                window.gtag = function() { dataLayer.push(arguments); };
+                gtag('js', new Date());
+                gtag('config', GA_ID);
+            }
+
+            function showBanner() {
+                document.getElementById('cookieConsent').classList.remove('hidden');
+            }
+
+            function hideBanner() {
+                document.getElementById('cookieConsent').classList.add('hidden');
+            }
+
+            window.acceptCookies = function() {
+                localStorage.setItem(CONSENT_KEY, 'accepted');
+                hideBanner();
+                loadGoogleAnalytics();
+            };
+
+            window.declineCookies = function() {
+                localStorage.setItem(CONSENT_KEY, 'declined');
+                hideBanner();
+            };
+
+            // On page load, check prior consent
+            var consent = getConsent();
+            if (consent === 'accepted') {
+                loadGoogleAnalytics();
+            } else if (!consent) {
+                showBanner();
+            }
+            // If 'declined', do nothing — no banner, no analytics
+        })();
     </script>
 </body>
 </html>
